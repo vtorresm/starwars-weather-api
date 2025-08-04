@@ -1,0 +1,93 @@
+service: starwars-weather-api
+frameworkVersion: '3'
+provider:
+  name: aws
+  runtime: nodejs20.x
+  memorySize: 128
+  timeout: 10
+  environment:
+    DYNAMODB_TABLE: ${self:service}-data
+    CACHE_TABLE: ${self:service}-cache
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:Query
+            - dynamodb:Scan
+          Resource: "*"
+functions:
+  getFusedData:
+    handler: src/handlers/fusedData.handler
+    events:
+      - http:
+          path: /fusionados
+          method: get
+  storeData:
+    handler: src/handlers/storeData.handler
+    events:
+      - http:
+          path: /almacenar
+          method: post
+          authorizer:
+            name: CognitoAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: !GetAtt CognitoUserPool.Arn
+  getHistory:
+    handler: src/handlers/history.handler
+    events:
+      - http:
+          path: /historial
+          method: get
+          authorizer:
+            name: CognitoAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: !GetAtt CognitoUserPool.Arn
+resources:
+  Resources:
+    DataTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:service}-data
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: timestamp
+            AttributeType: N
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+          - AttributeName: timestamp
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+    CacheTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:service}-cache
+        AttributeDefinitions:
+          - AttributeName: cacheKey
+            AttributeType: S
+        KeySchema:
+          - AttributeName: cacheKey
+            KeyType: HASH
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true
+        BillingMode: PAY_PER_REQUEST
+    CognitoUserPool:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: ${self:service}-user-pool
+        Policies:
+          PasswordPolicy:
+            MinimumLength: 8
+    CognitoUserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        UserPoolId: !Ref CognitoUserPool
+        ClientName: ${self:service}-client
+plugins:
+  - serverless-offline
+  - serverless-plugin-typescript

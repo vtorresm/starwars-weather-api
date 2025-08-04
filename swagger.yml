@@ -1,0 +1,62 @@
+openapi: 3.0.0
+   info:
+     title: Star Wars Weather API
+     version: 1.0.0
+   paths:
+     /fusionados:
+       get:
+         summary: Get fused Star Wars and weather data
+         parameters:
+           - name: characterId
+             in: query
+             schema:
+               type: string
+         responses:
+           '200':
+             description: Successful response
+             content:
+               application/json:
+                 schema:
+                   type: object
+                   properties:
+                     id: { type: string }
+                     characterName: { type: string }
+                     planetName: { type: string }
+                     planetClimate: { type: string }
+                     weather:
+                       type: object
+                       properties:
+                         temperature: { type: number }
+                         description: { type: string }
+                         humidity: { type: number }
+                     timestamp: { type: number }
+     /almacenar:
+       post:
+         summary: Store custom data
+         requestBody:
+           content:
+             application/json:
+               schema:
+                 type: object
+                 properties:
+                   name: { type: string }
+                   description: { type: string }
+                 required: [name, description]
+         responses:
+           '201':
+             description: Data stored successfully
+     /historial:
+       get:
+         summary: Get history of fused data
+         parameters:
+           - name: limit
+             in: query
+             schema:
+               type: integer
+           - name: offset
+             in: query
+             schema:
+               type: string
+         responses:
+           '200':
+             description: Paginated history

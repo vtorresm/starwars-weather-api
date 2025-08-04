@@ -1,0 +1,27 @@
+{
+  "name": "starwars-weather-api",
+  "version": "1.0.0",
+  "description": "RESTful API with Node.js and AWS for Star Wars and weather data",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "start": "serverless offline",
+    "deploy": "serverless deploy --stage prod"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.1490.0",
+    "axios": "^1.7.2",
+    "dotenv": "^16.4.5",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.14.10",
+    "@types/uuid": "^9.0.8",
+    "jest": "^29.7.0",
+    "serverless-offline": "^13.6.0",
+    "serverless-plugin-typescript": "^2.1.5",
+    "ts-jest": "^29.1.5",
+    "typescript": "^5.5.3"
+  }
+}
