@@ -1,8 +1,9 @@
+import { APIGatewayProxyResult } from 'aws-lambda';
 import { handler } from '../handlers/fusedData';
-   import { SwapiService } from '../services/swapiService';
-   import { WeatherService } from '../services/weatherService';
-   import { CacheService } from '../services/cacheService';
-   import { DbService } from '../services/dbService';
+import { SwapiService } from '../services/swapiService';
+import { WeatherService } from '../services/weatherService';
+import { CacheService } from '../services/cacheService';
+import { DbService } from '../services/dbService';
 
    jest.mock('../services/swapiService');
    jest.mock('../services/weatherService');
@@ -18,8 +19,8 @@ import { handler } from '../handlers/fusedData';
        const mockCachedData = { id: '1', characterName: 'Luke' };
        (CacheService.getCachedData as jest.Mock).mockResolvedValue(mockCachedData);
 
-       const event = { queryStringParameters: { characterId: '1' } };
-       const result = await handler(event as any, {} as any);
+      const event = { queryStringParameters: { characterId: '1' } };
+      const result = await handler(event as any, {} as any, {} as any) as APIGatewayProxyResult;
 
        expect(result.statusCode).toBe(200);
        expect(JSON.parse(result.body)).toEqual(mockCachedData);
@@ -41,8 +42,8 @@ import { handler } from '../handlers/fusedData';
        (DbService.storeFusedData as jest.Mock).mockResolvedValue(undefined);
        (CacheService.setCachedData as jest.Mock).mockResolvedValue(undefined);
 
-       const event = { queryStringParameters: { characterId: '1' } };
-       const result = await handler(event as any, {} as any);
+      const event = { queryStringParameters: { characterId: '1' } };
+      const result = await handler(event as any, {} as any, {} as any) as APIGatewayProxyResult;
 
        expect(result.statusCode).toBe(200);
        const body = JSON.parse(result.body);
