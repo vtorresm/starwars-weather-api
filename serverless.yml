@@ -6,8 +6,8 @@ provider:
   memorySize: 128
   timeout: 10
   environment:
-    DYNAMODB_TABLE: ${self:service}-data
-    CACHE_TABLE: ${self:service}-cache
+    DYNAMODB_TABLE: ${self:service}-${sls:stage}-data
+    CACHE_TABLE: ${self:service}-${sls:stage}-cache
   iam:
     role:
       statements:
@@ -50,7 +50,7 @@ resources:
     DataTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:service}-data
+        TableName: ${self:service}-${sls:stage}-data
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: S
@@ -65,7 +65,7 @@ resources:
     CacheTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:service}-cache
+        TableName: ${self:service}-${sls:stage}-cache
         AttributeDefinitions:
           - AttributeName: cacheKey
             AttributeType: S
@@ -79,7 +79,7 @@ resources:
     CognitoUserPool:
       Type: AWS::Cognito::UserPool
       Properties:
-        UserPoolName: ${self:service}-user-pool
+        UserPoolName: ${self:service}-${sls:stage}-user-pool
         Policies:
           PasswordPolicy:
             MinimumLength: 8
@@ -87,7 +87,7 @@ resources:
       Type: AWS::Cognito::UserPoolClient
       Properties:
         UserPoolId: !Ref CognitoUserPool
-        ClientName: ${self:service}-client
+        ClientName: ${self:service}-${sls:stage}-client
 plugins:
   - serverless-dotenv-plugin
   - serverless-offline
