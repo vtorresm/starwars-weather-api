@@ -1,8 +1,8 @@
-import { APIGatewayProxyHandler } from 'aws-lambda';
+import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
    import { DbService } from '../services/dbService';
    import { logger } from '../utils/logger';
 
-   export const handler: APIGatewayProxyHandler = async (event) => {
+   export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
      try {
        const limit = Number(event.queryStringParameters?.limit) || 10;
        const offset = event.queryStringParameters?.offset || undefined;

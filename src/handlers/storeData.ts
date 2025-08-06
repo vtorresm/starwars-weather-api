@@ -1,10 +1,10 @@
-import { APIGatewayProxyHandler } from 'aws-lambda';
+import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
    import { v4 as uuidv4 } from 'uuid';
    import { DbService } from '../services/dbService';
    import { CustomData } from '../models/customData';
    import { logger } from '../utils/logger';
 
-   export const handler: APIGatewayProxyHandler = async (event) => {
+   export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
      try {
        const data: Partial<CustomData> = JSON.parse(event.body || '{}');
        if (!data.name || !data.description) {

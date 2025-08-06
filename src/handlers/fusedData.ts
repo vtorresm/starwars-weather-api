@@ -1,4 +1,4 @@
-import { APIGatewayProxyHandler } from 'aws-lambda';
+import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
    import { v4 as uuidv4 } from 'uuid';
    import { SwapiService } from '../services/swapiService';
    import { WeatherService } from '../services/weatherService';
@@ -7,7 +7,7 @@ import { APIGatewayProxyHandler } from 'aws-lambda';
    import { FusedData } from '../models/fusedModel';
    import { logger } from '../utils/logger';
 
-   export const handler: APIGatewayProxyHandler = async (event) => {
+   export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
      try {
        const characterId = event.queryStringParameters?.characterId || '1';
        const cacheKey = `character_${characterId}`;
