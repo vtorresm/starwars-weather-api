@@ -89,5 +89,6 @@ resources:
         UserPoolId: !Ref CognitoUserPool
         ClientName: ${self:service}-client
 plugins:
+  - serverless-dotenv-plugin
   - serverless-offline
   - serverless-plugin-typescript
