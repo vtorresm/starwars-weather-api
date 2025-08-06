@@ -170,6 +170,51 @@ This command uses the `serverless.yml` configuration to create:
 
 The deployment output provides the API Gateway endpoint URLs (e.g., `https://<id>.execute-api.us-east-1.amazonaws.com/prod/`).
 
+## ✅ Production API Endpoints
+
+Your Star Wars Weather API is now live in production:
+
+- **GET** `/fusionados`: https://eymxtu8bx5.execute-api.us-east-1.amazonaws.com/prod/fusionados
+- **POST** `/almacenar`: https://eymxtu8bx5.execute-api.us-east-1.amazonaws.com/prod/almacenar  
+- **GET** `/historial`: https://eymxtu8bx5.execute-api.us-east-1.amazonaws.com/prod/historial
+
+### Example Usage
+
+**GET /fusionados** - Fetch fused Star Wars and weather data:
+```bash
+curl "https://eymxtu8bx5.execute-api.us-east-1.amazonaws.com/prod/fusionados?characterId=1"
+```
+
+Example response:
+```json
+{
+  "characterName": "Luke Skywalker",
+  "weather": {
+    "temperature": 25,
+    "description": "scattered clouds",
+    "humidity": 78
+  },
+  "id": "ffd86f3e-50e0-418d-8270-59cb9618dca4",
+  "planetName": "Tatooine",
+  "planetClimate": "arid",
+  "timestamp": 1754452565408
+}
+```
+
+**POST /almacenar** - Store custom data (requires authentication):
+```bash
+curl -X POST "https://eymxtu8bx5.execute-api.us-east-1.amazonaws.com/prod/almacenar" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <your-cognito-token>" \
+  -d '{"name":"Test","description":"Test description"}'
+```
+
+**GET /historial** - Retrieve paginated history (requires authentication):
+```bash
+curl "https://eymxtu8bx5.execute-api.us-east-1.amazonaws.com/prod/historial?limit=5" \
+  -H "Authorization: Bearer <your-cognito-token>"
+```
+
 ### 2. Test Deployed Endpoints
 Use the API Gateway URLs to test the deployed endpoints, similar to local testing:
 ```bash
