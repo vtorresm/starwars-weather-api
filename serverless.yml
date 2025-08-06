@@ -18,6 +18,14 @@ provider:
             - dynamodb:Query
             - dynamodb:Scan
           Resource: "*"
+  httpApi:
+    authorizers:
+      cognitoAuthorizer:
+        type: jwt
+        identitySource: $request.header.Authorization
+        issuerUrl: https://cognito-idp.us-east-1.amazonaws.com/us-east-1_TvtkzQQj9
+        audience:
+          - 5m24kbogjpi8u1jgfvhfn3jtdk
 functions:
   getFusedData:
     handler: src/handlers/fusedData.handler
@@ -34,7 +42,7 @@ functions:
           authorizer:
             name: CognitoAuthorizer
             type: COGNITO_USER_POOLS
-            arn: !GetAtt CognitoUserPool.Arn
+            arn: arn:aws:cognito-idp:us-east-1:324093102870:userpool/us-east-1_TvtkzQQj9
   getHistory:
     handler: src/handlers/history.handler
     events:
@@ -44,7 +52,7 @@ functions:
           authorizer:
             name: CognitoAuthorizer
             type: COGNITO_USER_POOLS
-            arn: !GetAtt CognitoUserPool.Arn
+            arn: arn:aws:cognito-idp:us-east-1:324093102870:userpool/us-east-1_TvtkzQQj9
 resources:
   Resources:
     DataTable:
