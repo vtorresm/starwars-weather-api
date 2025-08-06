@@ -215,6 +215,43 @@ curl "https://eymxtu8bx5.execute-api.us-east-1.amazonaws.com/prod/historial?limi
   -H "Authorization: Bearer <your-cognito-token>"
 ```
 
+## 🌐 Development API Endpoints
+
+Your Star Wars Weather API development environment is also available:
+
+- **GET** `/fusionados`: https://loc76w4n8h.execute-api.us-east-1.amazonaws.com/dev/fusionados
+- **POST** `/almacenar`: https://loc76w4n8h.execute-api.us-east-1.amazonaws.com/dev/almacenar
+- **GET** `/historial`: https://loc76w4n8h.execute-api.us-east-1.amazonaws.com/dev/historial
+
+### Development Environment Features
+
+**GET /fusionados** - Test with development data:
+```bash
+curl "https://loc76w4n8h.execute-api.us-east-1.amazonaws.com/dev/fusionados?characterId=1"
+```
+
+Example response (actual data from development):
+```json
+{
+  "characterName": "Luke Skywalker",
+  "weather": {
+    "temperature": 25,
+    "description": "broken clouds",
+    "humidity": 78
+  },
+  "id": "d7f1bfe8-2fba-461c-a623-91c3b7a15dca",
+  "planetName": "Tatooine",
+  "planetClimate": "arid",
+  "timestamp": 1754456832202
+}
+```
+
+**Development vs Production:**
+- **Development**: No authentication required (for easier testing)
+- **Production**: JWT authentication required for `/almacenar` and `/historial`
+- **Separate databases**: Development and production use isolated DynamoDB tables
+- **Local development**: Use `npm run start` to run locally at `http://localhost:3000`
+
 ### 2. Test Deployed Endpoints
 Use the API Gateway URLs to test the deployed endpoints, similar to local testing:
 ```bash
