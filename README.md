@@ -1,93 +1,107 @@
 # Star Wars Weather API
 
-This is a serverless RESTful API built with Node.js 20, TypeScript, and Serverless Framework, deployed on AWS Lambda with API Gateway and DynamoDB. It integrates the Star Wars API (SWAPI) and OpenWeatherMap API to fuse character and planet data with weather information, caches responses for 30 minutes, and provides endpoints for storing custom data and retrieving history. The project includes unit and integration tests with Jest and supports bonus features like AWS Cognito authentication and Swagger documentation.
+Esta es una API RESTful serverless desarrollada con Node.js 20, TypeScript, y Serverless Framework, desplegada en AWS Lambda con API Gateway y DynamoDB. Integra la API de Star Wars (SWAPI) y la API de OpenWeatherMap para combinar datos de personajes y planetas con información meteorológica, implementa un sistema de caché de 30 minutos, y ofrece endpoints para almacenar datos personalizados y recuperar historial. Incluye características adicionales como autenticación con AWS Cognito (opcional), documentación con Swagger, Rate Limiting, y monitoreo con AWS X-Ray.
 
-## Prerequisites
+## Características
+- **Endpoints**:
+  - `GET /fusionados`: Combina datos de SWAPI y OpenWeatherMap, con caché en DynamoDB.
+  - `POST /almacenar`: Almacena datos personalizados en DynamoDB.
+  - `GET /historial`: Recupera el historial de datos fusionados, con paginación.
+- **Rate Limiting**: Limita solicitudes en el endpoint `/fusionados` (5 por segundo, 10 simultáneas).
+- **AWS X-Ray**: Rastrea latencias y trazabilidad de solicitudes.
+- **Caché**: Almacena respuestas de APIs externas en DynamoDB con TTL de 30 minutos.
+- **Pruebas**: Unitarias e integración con Jest.
+- **Documentación**: Swagger en `swagger.yml`.
 
-- **Node.js**: Version 20.x
-- **AWS CLI**: Configured with valid credentials
-- **AWS Account**: For deployment
-- **OpenWeatherMap API Key**: Sign up at [OpenWeatherMap](https://openweathermap.org/) for a free API key
-- **Git**: For cloning the repository (optional)
-- **NPM**: For dependency management
+## Prerrequisitos
 
-## Project Structure
+- **Node.js**: Versión 20.x
+- **AWS CLI**: Configurado con credenciales válidas
+- **Cuenta de AWS**: Para despliegue
+- **Clave de API de OpenWeatherMap**: Regístrate en [OpenWeatherMap](https://openweathermap.org/) para obtener una clave gratuita
+- **Postman**: Para pruebas de API
+- **Git**: Opcional, para clonar el repositorio
+- **NPM**: Para gestionar dependencias
+
+## Estructura del Proyecto
 
 ```
 ├── src
-│   ├── handlers/          # Lambda handlers for endpoints
-│   ├── services/         # API and database services
-│   ├── models/           # Data models
-│   ├── utils/            # Utility functions (e.g., logging)
-│   ├── tests/            # Jest unit and integration tests
-├── .env                  # Environment variables
-├── package.json          # Dependencies and scripts
-├── serverless.yml        # Serverless Framework configuration
-├── tsconfig.json         # TypeScript configuration
-├── jest.config.js        # Jest configuration
-├── swagger.yml           # Swagger API documentation
-├── README.md             # This file
+│   ├── handlers/          # Handlers de Lambda para los endpoints
+│   ├── services/         # Servicios para APIs y base de datos
+│   ├── models/           # Modelos de datos
+│   ├── utils/            # Funciones de utilidad (e.g., logging, X-Ray)
+│   ├── tests/            # Pruebas unitarias e integración
+├── .env                  # Variables de entorno
+├── package.json          # Dependencias y scripts
+├── serverless.yml        # Configuración de Serverless Framework
+├── tsconfig.json         # Configuración de TypeScript
+├── jest.config.js        # Configuración de Jest
+├── swagger.yml           # Documentación de la API con Swagger
+├── README.md             # Este archivo
 ```
 
-## Setup Instructions
+## Configuración Inicial
 
-### 1. Clone the Repository (Optional)
-If you have a repository, clone it:
+### 1. Clonar el Repositorio (Opcional)
+Si tienes un repositorio, clónalo:
 ```bash
 git clone <repository-url>
 cd starwars-weather-api
 ```
 
-Alternatively, create a new directory and initialize the project:
+Alternativamente, crea un nuevo directorio:
 ```bash
 mkdir starwars-weather-api
 cd starwars-weather-api
 npm init -y
 ```
 
-### 2. Install Dependencies
-Install the required dependencies:
+### 2. Instalar Dependencias
+Instala las dependencias listadas en `package.json`:
 ```bash
 npm install
 ```
 
-The `package.json` includes:
-- Dependencies: `axios`, `aws-sdk`, `dotenv`, `serverless`, `uuid`
-- Dev Dependencies: `@types/jest`, `@types/node`, `@types/uuid`, `jest`, `serverless-offline`, `serverless-plugin-typescript`, `ts-jest`, `typescript`
+Dependencias principales:
+- `axios`, `aws-sdk`, `aws-xray-sdk`, `dotenv`, `serverless`, `uuid`
+- Dev: `@types/jest`, `@types/node`, `@types/uuid`, `jest`, `serverless-offline`, `serverless-plugin-typescript`, `ts-jest`, `typescript`
 
-### 3. Configure Environment Variables
-Create a `.env` file in the root directory and add your OpenWeatherMap API key:
+### 3. Configurar Variables de Entorno
+Crea un archivo `.env` en el directorio raíz:
 ```bash
-echo "WEATHER_API_KEY=your_openweathermap_api_key" > .env
+echo "WEATHER_API_KEY=tu_clave_openweathermap" > .env
 echo "DYNAMODB_TABLE=starwars-weather-api-data" >> .env
 echo "CACHE_TABLE=starwars-weather-api-cache" >> .env
+echo "API_KEY=tu_clave_api_gateway" >> .env
 ```
-Replace `your_openweathermap_api_key` with your actual API key.
+- Reemplaza `tu_clave_openweathermap` con tu clave de OpenWeatherMap.
+- Reemplaza `tu_clave_api_gateway` con una clave para Rate Limiting (opcional, se genera automáticamente al desplegar si no se especifica).
 
-### 4. Configure AWS Credentials
-Ensure the AWS CLI is installed and configured:
+### 4. Configurar Credenciales de AWS
+Asegúrate de tener el AWS CLI instalado y configurado:
 ```bash
 aws configure
 ```
-Enter your AWS Access Key ID, Secret Access Key, region (e.g., `us-east-1`), and output format (e.g., `json`).
+Ingresa tu Access Key ID, Secret Access Key, región (e.g., `us-east-1`), y formato de salida (e.g., `json`).
 
-## Running Locally
+## Levantar la Aplicación Localmente
 
-### 1. Start the Local Server
-Use `serverless-offline` to simulate AWS Lambda and API Gateway:
+### 1. Iniciar el Servidor Local
+Usa `serverless-offline` para simular AWS Lambda y API Gateway:
 ```bash
 npm run start
 ```
-This starts the server at `http://localhost:3000`.
+Esto inicia el servidor en `http://localhost:3000`.
 
-### 2. Test Endpoints Locally
-Use `curl`, Postman, or a similar tool to test the endpoints:
+### 2. Probar Endpoints Localmente
 
-- **GET /fusionados**: Fetch fused Star Wars and weather data
+#### Usando cURL
+- **GET /fusionados**: Obtiene datos combinados de SWAPI y OpenWeatherMap.
   ```bash
-  curl http://localhost:3000/fusionados?characterId=1
+  curl -H "x-api-key: tu_clave_api_gateway" http://localhost:3000/fusionados?characterId=1
   ```
-  Example response:
+  Respuesta esperada:
   ```json
   {
     "id": "uuid",
@@ -102,12 +116,13 @@ Use `curl`, Postman, or a similar tool to test the endpoints:
     "timestamp": 1698765432000
   }
   ```
+  Nota: En local, `x-api-key` puede no ser necesario si `private: true` no está activo en `serverless.yml`.
 
-- **POST /almacenar**: Store custom data
+- **POST /almacenar**: Almacena datos personalizados.
   ```bash
   curl -X POST http://localhost:3000/almacenar -H "Content-Type: application/json" -d '{"name":"Test","description":"Test description"}'
   ```
-  Example response:
+  Respuesta esperada:
   ```json
   {
     "id": "uuid",
@@ -117,11 +132,11 @@ Use `curl`, Postman, or a similar tool to test the endpoints:
   }
   ```
 
-- **GET /historial**: Retrieve paginated history
+- **GET /historial**: Recupera el historial paginado.
   ```bash
   curl http://localhost:3000/historial?limit=5
   ```
-  Example response:
+  Respuesta esperada:
   ```json
   [
     {
@@ -135,172 +150,228 @@ Use `curl`, Postman, or a similar tool to test the endpoints:
   ]
   ```
 
-## Running Tests
+#### Usando Postman
+1. **Configurar Postman**:
+   - Descarga e instala Postman desde [Postman](https://www.postman.com/).
+   - Crea una nueva colección llamada `StarWarsWeatherAPI`.
 
-### 1. Run Unit and Integration Tests
-Execute tests using Jest:
+2. **GET /fusionados**:
+   - Crea una nueva solicitud en Postman:
+     - Método: GET
+     - URL: `http://localhost:3000/fusionados?characterId=1`
+     - Headers: Añade `x-api-key: tu_clave_api_gateway` (si aplica).
+   - Envía la solicitud y verifica la respuesta JSON (similar a la de cURL).
+
+3. **POST /almacenar**:
+   - Crea una nueva solicitud:
+     - Método: POST
+     - URL: `http://localhost:3000/almacenar`
+     - Headers: `Content-Type: application/json`
+     - Body: Selecciona `raw` > `JSON` y añade:
+       ```json
+       {
+         "name": "Test",
+         "description": "Test description"
+       }
+       ```
+   - Envía la solicitud y verifica el código 201 y la respuesta JSON.
+
+4. **GET /historial**:
+   - Crea una nueva solicitud:
+     - Método: GET
+     - URL: `http://localhost:3000/historial?limit=5`
+   - Envía la solicitud y verifica la lista de datos fusionados.
+
+### 3. Probar Rate Limiting Localmente
+Nota: Rate Limiting no funciona completamente en `serverless-offline`. Debes probarlo en el entorno desplegado (ver más adelante).
+
+### 4. Probar AWS X-Ray Localmente
+X-Ray no envía datos en modo local, pero puedes verificar que no genera errores ejecutando las solicitudes anteriores. Los logs en la consola mostrarán las operaciones instrumentadas.
+
+## Ejecutar Pruebas
+
+### 1. Ejecutar Pruebas Unitarias e Integración
+Ejecuta las pruebas con Jest:
 ```bash
 npm test
 ```
 
-The tests cover:
-- **GET /fusionados**: Cache hits and API data fusion
-- **POST /almacenar**: Input validation and storage
-- **GET /historial**: Paginated history retrieval
+Las pruebas cubren:
+- **GET /fusionados**: Verifica caché y fusión de datos.
+- **POST /almacenar**: Valida almacenamiento y manejo de errores.
+- **GET /historial**: Comprueba paginación.
+- **X-Ray**: Verifica creación de subsegmentos (mockeados).
 
-Test files are located in `src/tests/`. Example test coverage:
-- `fusedData.test.ts`: Verifies cache and API integration
-- `storeData.test.ts`: Ensures valid data storage
-- `history.test.ts`: Tests pagination logic
+Archivos de pruebas: `src/tests/fusedData.test.ts`, `src/tests/storeData.test.ts`, `src/tests/history.test.ts`.
 
-### 2. Mock External APIs
-Tests use mocked versions of SWAPI and OpenWeatherMap to avoid external calls. Ensure the `.env` file is present for local testing.
+### 2. Probar con Postman
+Añade pruebas automáticas en Postman:
+- Para `GET /fusionados`:
+  ```javascript
+  pm.test("Status code is 200", () => {
+    pm.response.to.have.status(200);
+  });
+  pm.test("Response has characterName", () => {
+    const response = pm.response.json();
+    pm.expect(response.characterName).to.be.a('string');
+  });
+  ```
 
-## Deployment
+- Para `POST /almacenar`:
+  ```javascript
+  pm.test("Status code is 201", () => {
+    pm.response.to.have.status(201);
+  });
+  pm.test("Response has id", () => {
+    const response = pm.response.json();
+    pm.expect(response.id).to.be.a('string');
+  });
+  ```
 
-### 1. Deploy to AWS
-Deploy the application to AWS Lambda, API Gateway, and DynamoDB:
+- Para `GET /historial`:
+  ```javascript
+  pm.test("Status code is 200", () => {
+    pm.response.to.have.status(200);
+  });
+  pm.test("Response is an array", () => {
+    const response = pm.response.json();
+    pm.expect(response).to.be.an('array');
+  });
+  ```
+
+## Levantar la Aplicación en Producción
+
+### 1. Desplegar a AWS
+Despliega la aplicación a AWS Lambda, API Gateway, y DynamoDB:
 ```bash
 npm run deploy
 ```
-This command uses the `serverless.yml` configuration to create:
-- Two DynamoDB tables: `starwars-weather-api-data` and `starwars-weather-api-cache`
-- Three Lambda functions: `getFusedData`, `storeData`, `getHistory`
-- API Gateway endpoints: `/fusionados`, `/almacenar`, `/historial`
 
-The deployment output provides the API Gateway endpoint URLs (e.g., `https://<id>.execute-api.us-east-1.amazonaws.com/prod/`).
+Esto crea:
+- Tablas DynamoDB: `starwars-weather-api-data` y `starwars-weather-api-cache`
+- Funciones Lambda: `getFusedData`, `storeData`, `getHistory`
+- Endpoints de API Gateway: `/fusionados`, `/almacenar`, `/historial`
+- Clave de API y plan de uso para Rate Limiting
+- Configuración de X-Ray para trazabilidad
 
-## ✅ Production API Endpoints
+La salida del despliegue proporciona las URLs de API Gateway (e.g., `https://<api-id>.execute-api.us-east-1.amazonaws.com/prod/`).
 
-Your Star Wars Weather API is now live in production:
+### 2. Obtener la Clave de API
+1. Ve a la consola de AWS API Gateway.
+2. En **API Keys**, encuentra la clave generada (`starwarsWeatherApiKey`) o usa la definida en `.env` (`API_KEY`).
+3. Copia la clave para usarla en las pruebas.
 
-- **GET** `/fusionados`: https://eymxtu8bx5.execute-api.us-east-1.amazonaws.com/prod/fusionados
-- **POST** `/almacenar`: https://eymxtu8bx5.execute-api.us-east-1.amazonaws.com/prod/almacenar  
-- **GET** `/historial`: https://eymxtu8bx5.execute-api.us-east-1.amazonaws.com/prod/historial
+### 3. Probar Endpoints en Producción
 
-### Example Usage
+#### Usando cURL
+- **GET /fusionados** (con Rate Limiting):
+  ```bash
+  curl -H "x-api-key: tu_clave_api_gateway" https://<api-id>.execute-api.us-east-1.amazonaws.com/prod/fusionados?characterId=1
+  ```
+  Respuesta esperada: Similar a la prueba local.
+  Para probar Rate Limiting, envía múltiples solicitudes rápidas:
+  ```bash
+  for i in {1..15}; do curl -H "x-api-key: tu_clave_api_gateway" https://<api-id>.execute-api.us-east-1.amazonaws.com/prod/fusionados?characterId=1; done
+  ```
+  Deberías ver errores `429 Too Many Requests` después de exceder el límite (5 solicitudes/segundo, 10 simultáneas).
 
-**GET /fusionados** - Fetch fused Star Wars and weather data:
-```bash
-curl "https://eymxtu8bx5.execute-api.us-east-1.amazonaws.com/prod/fusionados?characterId=1"
-```
+- **POST /almacenar**:
+  ```bash
+  curl -X POST https://<api-id>.execute-api.us-east-1.amazonaws.com/prod/almacenar -H "Content-Type: application/json" -d '{"name":"Test","description":"Test description"}'
+  ```
+  Respuesta esperada: Código 201 y datos almacenados.
 
-Example response:
-```json
-{
-  "characterName": "Luke Skywalker",
-  "weather": {
-    "temperature": 25,
-    "description": "scattered clouds",
-    "humidity": 78
-  },
-  "id": "ffd86f3e-50e0-418d-8270-59cb9618dca4",
-  "planetName": "Tatooine",
-  "planetClimate": "arid",
-  "timestamp": 1754452565408
-}
-```
+- **GET /historial**:
+  ```bash
+  curl https://<api-id>.execute-api.us-east-1.amazonaws.com/prod/historial?limit=5
+  ```
+  Respuesta esperada: Lista de datos fusionados.
 
-**POST /almacenar** - Store custom data (requires authentication):
-```bash
-curl -X POST "https://eymxtu8bx5.execute-api.us-east-1.amazonaws.com/prod/almacenar" \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <your-cognito-token>" \
-  -d '{"name":"Test","description":"Test description"}'
-```
+#### Usando Postman
+1. **Configurar entorno en Postman**:
+   - Crea un entorno llamado `Producción`.
+   - Añade variables:
+     - `baseUrl`: `https://<api-id>.execute-api.us-east-1.amazonaws.com/prod`
+     - `apiKey`: `tu_clave_api_gateway`
 
-**GET /historial** - Retrieve paginated history (requires authentication):
-```bash
-curl "https://eymxtu8bx5.execute-api.us-east-1.amazonaws.com/prod/historial?limit=5" \
-  -H "Authorization: Bearer <your-cognito-token>"
-```
+2. **GET /fusionados**:
+   - Método: GET
+   - URL: `{{baseUrl}}/fusionados?characterId=1`
+   - Headers: `x-api-key: {{apiKey}}`
+   - Envía la solicitud y verifica la respuesta JSON.
+   - Para probar Rate Limiting, crea un script en Postman para enviar múltiples solicitudes:
+     ```javascript
+     for (let i = 0; i < 15; i++) {
+       pm.sendRequest({
+         url: '{{baseUrl}}/fusionados?characterId=1',
+         method: 'GET',
+         header: { 'x-api-key': '{{apiKey}}' }
+       });
+     }
+     ```
+     Verifica errores `429` en las respuestas.
 
-## 🌐 Development API Endpoints
+3. **POST /almacenar**:
+   - Método: POST
+   - URL: `{{baseUrl}}/almacenar`
+   - Headers: `Content-Type: application/json`
+   - Body: `raw` > `JSON`:
+     ```json
+     {
+       "name": "Test",
+       "description": "Test description"
+     }
+     ```
+   - Envía y verifica el código 201.
 
-Your Star Wars Weather API development environment is also available:
+4. **GET /historial**:
+   - Método: GET
+   - URL: `{{baseUrl}}/historial?limit=5`
+   - Envía y verifica la lista de datos.
 
-- **GET** `/fusionados`: https://loc76w4n8h.execute-api.us-east-1.amazonaws.com/dev/fusionados
-- **POST** `/almacenar`: https://loc76w4n8h.execute-api.us-east-1.amazonaws.com/dev/almacenar
-- **GET** `/historial`: https://loc76w4n8h.execute-api.us-east-1.amazonaws.com/dev/historial
+### 4. Probar AWS X-Ray en Producción
+1. Realiza solicitudes a los endpoints desplegados usando cURL o Postman.
+2. Ve a la consola de AWS X-Ray:
+   - Navega a **X-Ray** > **Traces** en tu región (e.g., `us-east-1`).
+   - Busca trazos para `/fusionados`, `/almacenar`, y `/historial`.
+   - Verifica los subsegmentos:
+     - `GetFusedData`, `StoreData`, `GetHistory` (handlers)
+     - `SWAPI`, `OpenWeatherMap`, `DynamoDB_*` (servicios)
+   - Revisa el **Service Map** para ver interacciones entre API Gateway, Lambda, DynamoDB, y APIs externas.
+   - Analiza latencias para optimizar el rendimiento.
 
-### Development Environment Features
+## Monitoreo y Optimización
 
-**GET /fusionados** - Test with development data:
-```bash
-curl "https://loc76w4n8h.execute-api.us-east-1.amazonaws.com/dev/fusionados?characterId=1"
-```
+### 1. CloudWatch Logs
+- Revisa los logs en AWS CloudWatch bajo `/aws/lambda/starwars-weather-api-*` para errores y métricas.
+- Busca mensajes `INFO` y `ERROR` generados por `logger.ts`.
 
-Example response (actual data from development):
-```json
-{
-  "characterName": "Luke Skywalker",
-  "weather": {
-    "temperature": 25,
-    "description": "broken clouds",
-    "humidity": 78
-  },
-  "id": "d7f1bfe8-2fba-461c-a623-91c3b7a15dca",
-  "planetName": "Tatooine",
-  "planetClimate": "arid",
-  "timestamp": 1754456832202
-}
-```
+### 2. Rate Limiting
+- Monitorea el uso en la consola de API Gateway > **Usage Plans** > **main**.
+- Ajusta `burstLimit`, `rateLimit`, o `quota` en `serverless.yml` si es necesario y redeploy:
+  ```bash
+  npm run deploy
+  ```
 
-**Development vs Production:**
-- **Development**: No authentication required (for easier testing)
-- **Production**: JWT authentication required for `/almacenar` and `/historial`
-- **Separate databases**: Development and production use isolated DynamoDB tables
-- **Local development**: Use `npm run start` to run locally at `http://localhost:3000`
+### 3. AWS X-Ray
+- Usa el **Service Map** y los trazos para identificar cuellos de botella (e.g., APIs externas lentas).
+- Optimiza la memoria de Lambda (128MB por defecto) si las latencias son altas.
 
-### 2. Test Deployed Endpoints
-Use the API Gateway URLs to test the deployed endpoints, similar to local testing:
-```bash
-curl https://<api-id>.execute-api.us-east-1.amazonaws.com/prod/fusionados?characterId=1
-```
+## Limpieza
 
-### 3. Monitor Logs
-Check logs in AWS CloudWatch under the `/aws/lambda/starwars-weather-api-*` log group. The `logger.ts` utility logs `INFO` and `ERROR` levels for debugging.
-
-## Configuration Details
-
-### Environment Variables
-- `WEATHER_API_KEY`: OpenWeatherMap API key
-- `DYNAMODB_TABLE`: Name of the DynamoDB table for data storage (`starwars-weather-api-data`)
-- `CACHE_TABLE`: Name of the DynamoDB table for caching (`starwars-weather-api-cache`)
-
-### AWS Resources
-- **Lambda**: Configured with 128MB memory and 10-second timeout for cost efficiency.
-- **DynamoDB**: Uses on-demand billing and TTL for cache table.
-- **API Gateway**: Exposes REST endpoints with optional Cognito authentication.
-- **CloudWatch**: Logs API requests and errors.
-
-### Bonus Features
-- **AWS Cognito**: Protects `/almacenar` and `/historial` endpoints (configured in `serverless.yml`).
-- **Swagger Documentation**: Available in `swagger.yml`. Serve locally with `swagger-ui-express` or integrate with API Gateway.
-- **Rate Limiting**: Configured in API Gateway via usage plans in `serverless.yml`.
-- **AWS X-Ray**: Enabled for tracing (optional, configured in `serverless.yml`).
-
-## Cost Optimization
-- **Lambda**: Minimal memory (128MB) and timeout (10s).
-- **DynamoDB**: On-demand billing to avoid over-provisioning; TTL for cache cleanup.
-- **API Gateway**: Optional caching for GET endpoints to reduce costs.
-
-## Troubleshooting
-- **SWAPI Issues**: SWAPI may be rate-limited. Use mocks during testing.
-- **OpenWeatherMap**: Ensure a valid API key is set in `.env`.
-- **Deployment Errors**: Verify AWS credentials and region in `aws configure`.
-- **Tests Failing**: Check mocks and `.env` configuration.
-
-## Cleanup
-Remove AWS resources to avoid costs:
+Para evitar costos, elimina los recursos de AWS:
 ```bash
 serverless remove --stage prod
 ```
 
-## Additional Notes
-- **Caching**: Responses are cached in DynamoDB for 30 minutes using TTL.
-- **Testing**: Expand integration tests with `cucumber-js` for Gherkin/BDD (optional).
-- **Documentation**: View `swagger.yml` with Swagger UI for endpoint details.
-- **Extensibility**: Add more planet-to-city mappings in `weatherService.ts` for broader coverage.
+## Notas Adicionales
+- **Rate Limiting**: Solo funciona en producción. Ajusta los límites según necesidades.
+- **AWS X-Ray**: Agrega un costo mínimo, pero es útil para depuración. Desactiva (`tracing.lambda: false`) si no es necesario.
+- **Caché**: Verifica en DynamoDB (`starwars-weather-api-cache`) que las respuestas se almacenen con TTL de 30 minutos.
+- **Swagger**: Usa `swagger.yml` con Swagger UI para explorar la documentación.
+- **Problemas Comunes**:
+  - **SWAPI lento**: Usa mocks en pruebas locales.
+  - **Clave de API inválida**: Verifica la clave en AWS API Gateway.
+  - **Errores de X-Ray**: Asegúrate de que los permisos IAM incluyan `xray:PutTraceSegments`.
 
-For further assistance, contact the project maintainer or refer to the [Serverless Framework documentation](https://www.serverless.com/framework/docs).
+Para soporte adicional, consulta la documentación de [Serverless Framework](https://www.serverless.com/framework/docs) o contacta al mantenedor del proyecto.

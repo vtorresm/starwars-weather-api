@@ -1,31 +1,42 @@
 import axios from 'axios';
-import https from 'https';
+import * as AWSXRay from 'aws-xray-sdk';
+import * as https from 'https';
 
-// Create axios instance with SSL certificate bypass for development
-const axiosInstance = axios.create({
-  httpsAgent: new https.Agent({
-    rejectUnauthorized: false // Only use this in development!
-  }),
-  timeout: 10000, // 10 second timeout
-  headers: {
-    'User-Agent': 'StarWars-Weather-API/1.0.0'
-  }
+// Configurar axios para ignorar certificados SSL expirados (SWAPI tiene certificado expirado)
+axios.defaults.httpsAgent = new https.Agent({
+  rejectUnauthorized: false // Ignorar certificados SSL
 });
+
+// Solo instrumentar en producción (no en serverless offline)
+if (!process.env.IS_OFFLINE) {
+  AWSXRay.captureHTTPsGlobal(require('http'));
+  AWSXRay.captureHTTPsGlobal(require('https'));
+}
 
 export class SwapiService {
   static async getCharacter(id: number) {
-    const response = await axiosInstance.get(`https://swapi.py4e.com/api/people/${id}/`);
-    const character = response.data;
-    const planet = await this.getPlanet(character.homeworld);
-    return {
-      characterName: character.name,
-      planetName: planet.name,
-      planetClimate: planet.climate.toLowerCase(),
-    };
+    const segment = process.env.IS_OFFLINE ? null : AWSXRay.getSegment()?.addNewSubsegment('SWAPI');
+    try {
+      const response = await axios.get(`https://swapi.dev/api/people/${id}/`);
+      const character = response.data;
+      const planet = await this.getPlanet(character.homeworld);
+      return {
+        characterName: character.name,
+        planetName: planet.name,
+        planetClimate: planet.climate.toLowerCase(),
+      };
+    } finally {
+      segment?.close();
+    }
   }
 
   static async getPlanet(url: string) {
-    const response = await axiosInstance.get(url);
-    return response.data;
+    const segment = process.env.IS_OFFLINE ? null : AWSXRay.getSegment()?.addNewSubsegment('SWAPI_Planet');
+    try {
+      const response = await axios.get(url);
+      return response.data;
+    } finally {
+      segment?.close();
+    }
   }
 }
